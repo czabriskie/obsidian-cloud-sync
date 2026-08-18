@@ -44,10 +44,20 @@ ob login --email "$OBSIDIAN_EMAIL" --password "$OBSIDIAN_PASSWORD" "${MFA_ARGS[@
 
 if [ ! -f "$VAULT_DIR/.sync-configured" ]; then
   if [ -n "$OBSIDIAN_VAULT_PASSWORD" ]; then
-    ob sync-setup --vault "$VAULT_NAME" --path "$VAULT_DIR" --password "$OBSIDIAN_VAULT_PASSWORD" --json
+    SYNC_SETUP_OUT=$(ob sync-setup --vault "$VAULT_NAME" --path "$VAULT_DIR" --password "$OBSIDIAN_VAULT_PASSWORD" --json 2>&1)
   else
-    ob sync-setup --vault "$VAULT_NAME" --path "$VAULT_DIR" --json
-  fi || { echo "vault-sync: sync-setup failed; check vault name with 'ob sync-list-remote --json'" >&2; exit 0; }
+    SYNC_SETUP_OUT=$(ob sync-setup --vault "$VAULT_NAME" --path "$VAULT_DIR" --json 2>&1)
+  fi
+  SYNC_SETUP_STATUS=$?
+  echo "$SYNC_SETUP_OUT"
+  if [ $SYNC_SETUP_STATUS -ne 0 ]; then
+    if echo "$SYNC_SETUP_OUT" | grep -qi "password not provided"; then
+      echo "vault-sync: sync-setup failed - this vault has E2E encryption enabled and requires OBSIDIAN_VAULT_PASSWORD to be set in the environment config" >&2
+    else
+      echo "vault-sync: sync-setup failed; check vault name with 'ob sync-list-remote --json'" >&2
+    fi
+    exit 0
+  fi
   touch "$VAULT_DIR/.sync-configured"
 fi
 
