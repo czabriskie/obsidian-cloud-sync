@@ -1,8 +1,31 @@
 # obsidian-cloud-sync
 
-Gives Claude Code **cloud sessions** access to my Obsidian Sync vault ("Life") by pulling it
-into the container with the official [obsidian-headless](https://github.com/obsidianmd/obsidian-headless)
-client at session start. Locally this repo does nothing — the desktop app already syncs the vault.
+Gives Claude Code **cloud sessions** access to an Obsidian Sync vault by pulling it into the
+container with the official [obsidian-headless](https://github.com/obsidianmd/obsidian-headless)
+client at session start. Locally this repo does nothing — the desktop app already syncs the
+vault there.
+
+Obsidian Sync has no public API and is end-to-end encrypted, so there is nothing to call
+remotely. The headless client sidesteps that by making the container a sync *device*: it
+pulls the encrypted vault and decrypts it locally, exactly like the app on a phone does.
+
+> ### ⚠️ Read this before copying the MFA setup
+>
+> This repo is built for **one person's personal vault and personal cloud environment**.
+>
+> Claude cloud environments have no secrets store yet, so the Obsidian credentials — and,
+> if you enable the MFA support below, the TOTP seed — sit in plaintext in the environment
+> configuration, readable by anyone with access to that environment. In a personal
+> environment that's a considered tradeoff: MFA still protects the account against a
+> password leak anywhere else, which is most of what MFA does day to day.
+>
+> **In a shared or team environment this is a hard no.** A TOTP seed sitting next to the
+> password it's supposed to protect, where teammates can read both, defeats the entire
+> point of the second factor. Don't do it. Use a personal environment, or wait for a real
+> secrets store.
+>
+> The same goes for the vault itself: sync pulls personal notes into a container. Keep the
+> environment private.
 
 ## How it works
 
@@ -10,26 +33,32 @@ client at session start. Locally this repo does nothing — the desktop app alre
   environment; cached in the environment snapshot (~7-day TTL).
 - **SessionStart hook** (`.claude/settings.json`): runs `.claude/scripts/cloud-init.sh` on
   every session. The script is a no-op unless `CLAUDE_CODE_REMOTE=true`, so it never runs on
-  my Mac (headless sync + the desktop app on the same device causes conflicts).
-- **`vault-sync` skill** (`.claude/skills/vault-sync/`): lets Claude re-sync or troubleshoot
-  on demand. It lives in the repo so cloud sessions get it too — personal `~/.claude` skills
-  don't travel to cloud containers.
+  a machine where the desktop app is already syncing (running both on one device causes
+  conflicts).
+- **Skills** (`.claude/skills/`): `vault-sync` to sync/verify/troubleshoot, `write-article`
+  to draft from vault notes. They live in the repo because personal `~/.claude` skills don't
+  travel to cloud containers — repo skills do.
 - **Permissions allowlist** (`.claude/settings.json`): pre-approves the `ob` / npm commands
-  so scheduled runs need no permission prompts.
-- **Weekly routine**: a scheduled cloud agent syncs the vault weekly, which also keeps the
-  environment snapshot warm so interactive sessions start fast.
+  so unattended runs never stall on a prompt.
+- **A weekly scheduled routine** re-verifies the pipeline and keeps the environment snapshot
+  warm. It's also told to repair the script if the beta CLI's flags drift, and it has
+  already done exactly that once.
 
 The vault lands at `$HOME/vault` inside the container and is never committed to this repo.
 
-## One-time environment setup (claude.ai/code → environment dialog)
+## Setup
 
-1. **Environment variables** (`.env` format): `OBSIDIAN_EMAIL`, `OBSIDIAN_PASSWORD`,
-   `OBSIDIAN_VAULT_NAME` (=Life), and `OBSIDIAN_VAULT_PASSWORD` only if the vault uses a
-   custom E2E encryption password.
+1. **Environment variables** (cloud environment dialog, `.env` format):
 
-   ⚠️ Cloud environments have **no secrets store yet** — environment variables are stored in
-   plaintext in the environment config and are readable by anyone with access to the
-   environment. Keep this environment personal; rotate the password if it may have leaked.
+   ```
+   OBSIDIAN_EMAIL=you@example.com
+   OBSIDIAN_PASSWORD=your-account-password
+   OBSIDIAN_VAULT_NAME=YourVaultName
+   # only if the remote vault uses a custom E2E encryption password:
+   OBSIDIAN_VAULT_PASSWORD=your-vault-encryption-password
+   # only if MFA is enabled — read the warning above first:
+   OBSIDIAN_TOTP_SECRET=BASE32SEEDFROMENROLLMENT
+   ```
 
 2. **Setup script**:
 
@@ -38,34 +67,26 @@ The vault lands at `$HOME/vault` inside the container and is never committed to 
    exit 0
    ```
 
-3. **Network access**: set to **Full**, or Custom with Obsidian's API/sync domains allowed
-   (the default Trusted list may not include them).
+3. **Network access**: set to **Full**, or Custom with Obsidian's API/sync domains allowed —
+   the default Trusted list may not include them.
 
-4. **MFA**: with MFA enabled on the Obsidian account, add the TOTP seed as
-   `OBSIDIAN_TOTP_SECRET` (the base32 string shown under "can't scan?" when enrolling the
-   authenticator) — `cloud-init.sh` computes the current 6-digit code at each login. Note
-   this stores the seed beside the password in the environment config; MFA still protects
-   the account against password leaks elsewhere, but not against someone reading this
-   environment. Without the seed, unattended runs require MFA to be off.
+4. Start a cloud session on this repo. The hook syncs the vault to `~/vault` before Claude
+   does anything.
 
-## Using from the Claude app (remote)
+### About the MFA seed
 
-After the one-time environment setup above, everything runs from claude.ai or the mobile app —
-no local machine involved:
-
-1. Go to **claude.ai/code** (or the Claude app) → new cloud session → repository
-   **czabriskie/obsidian-cloud-sync**, environment **obsidian-vault** (the dedicated
-   environment holding the `OBSIDIAN_*` variables — keeps them out of other environments).
-2. The SessionStart hook syncs the vault to `~/vault` automatically. Ask Claude to
-   "check the vault synced" if unsure (it runs the `vault-sync` skill).
-3. To write an article from vault notes, say e.g. *"use the write-article skill: draft an
-   article about &lt;topic&gt;"*. Drafts land in `articles/` and are pushed to this repo.
-4. The **Weekly Obsidian vault sync** routine (claude.ai/code/routines) re-verifies the
-   pipeline every Monday morning and keeps the environment snapshot warm.
+`ob login` accepts `--mfa <code>`, and a TOTP code is just a computation over a base32 seed
+(the "can't scan the QR?" string shown during authenticator enrollment). `cloud-init.sh`
+computes the current code at login time if `OBSIDIAN_TOTP_SECRET` is set, and behaves
+exactly as before if it isn't. Re-read the warning at the top before using it.
 
 ## Notes
 
-- `obsidian-headless` is an open beta; if a flag has changed, `ob --help` and
-  `ob sync-list-remote --json` are the ground truth. The vault-sync skill says the same.
-- Sync mode is bidirectional by default, so edits Claude makes in the cloud propagate back
-  to my devices through Obsidian Sync. Use `ob sync-config --mode pull-only` for read-only.
+- `obsidian-headless` is an open beta. Flags drift; `ob --help` and
+  `ob sync-list-remote --json` are the ground truth, and the `vault-sync` skill tells agents
+  to check there and commit fixes.
+- Sync is bidirectional by default, so edits made in a cloud session propagate back to every
+  device on the account. `ob sync-config --mode pull-only` makes it read-only.
+
+Write-up of how and why this exists:
+https://camzabriskie.com/tech-bytes/vault-in-the-container/

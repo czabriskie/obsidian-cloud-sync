@@ -19,9 +19,9 @@ Pull the latest Obsidian Sync data into this environment using the official
 
 ## Cloud only
 
-Only sync when `CLAUDE_CODE_REMOTE=true`. On the user's local machine the Obsidian desktop
-app owns syncing (vault at `~/Vaults/Life`); running headless sync there causes data
-conflicts. If invoked locally, read the vault directly from `~/Vaults/Life` instead.
+Only sync when `CLAUDE_CODE_REMOTE=true`. On a machine running the Obsidian desktop app,
+the app owns syncing; running headless sync there causes data conflicts. If invoked
+locally, read the local vault directly instead.
 
 ## Steps
 
