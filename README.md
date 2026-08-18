@@ -50,7 +50,8 @@ After the one-time environment setup above, everything runs from claude.ai or th
 no local machine involved:
 
 1. Go to **claude.ai/code** (or the Claude app) → new cloud session → repository
-   **czabriskie/obsidian-cloud-sync**, environment **Zabalytics**.
+   **czabriskie/obsidian-cloud-sync**, environment **obsidian-vault** (the dedicated
+   environment holding the `OBSIDIAN_*` variables — keeps them out of other environments).
 2. The SessionStart hook syncs the vault to `~/vault` automatically. Ask Claude to
    "check the vault synced" if unsure (it runs the `vault-sync` skill).
 3. To write an article from vault notes, say e.g. *"use the write-article skill: draft an
