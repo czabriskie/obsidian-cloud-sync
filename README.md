@@ -44,6 +44,20 @@ The vault lands at `$HOME/vault` inside the container and is never committed to 
 4. **MFA**: `ob login` cannot automate a live MFA code. For unattended runs the Obsidian
    account must not have MFA enabled (or you log in manually once per session).
 
+## Using from the Claude app (remote)
+
+After the one-time environment setup above, everything runs from claude.ai or the mobile app —
+no local machine involved:
+
+1. Go to **claude.ai/code** (or the Claude app) → new cloud session → repository
+   **czabriskie/obsidian-cloud-sync**, environment **Zabalytics**.
+2. The SessionStart hook syncs the vault to `~/vault` automatically. Ask Claude to
+   "check the vault synced" if unsure (it runs the `vault-sync` skill).
+3. To write an article from vault notes, say e.g. *"use the write-article skill: draft an
+   article about &lt;topic&gt;"*. Drafts land in `articles/` and are pushed to this repo.
+4. The **Weekly Obsidian vault sync** routine (claude.ai/code/routines) re-verifies the
+   pipeline every Monday morning and keeps the environment snapshot warm.
+
 ## Notes
 
 - `obsidian-headless` is an open beta; if a flag has changed, `ob --help` and
