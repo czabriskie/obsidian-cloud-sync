@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ob:*)",
+      "Bash(obsidian-headless:*)",
+      "Bash(npm install -g obsidian-headless)",
+      "Read(//~/vault/**)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/scripts/cloud-init.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
