@@ -19,8 +19,8 @@ VAULT_DIR="${OBSIDIAN_VAULT_DIR:-$HOME/vault}"
 VAULT_NAME="${OBSIDIAN_VAULT_NAME:-Life}"
 mkdir -p "$VAULT_DIR"
 
-# --json disables interactive prompts; credentials come from env vars only.
-ob login --email "$OBSIDIAN_EMAIL" --password "$OBSIDIAN_PASSWORD" --json \
+# ob login has no --json flag (as of this beta CLI); credentials come from env vars only.
+ob login --email "$OBSIDIAN_EMAIL" --password "$OBSIDIAN_PASSWORD" \
   || { echo "vault-sync: ob login failed (MFA enabled on the account? flags changed? try 'ob --help')" >&2; exit 0; }
 
 if [ ! -f "$VAULT_DIR/.sync-configured" ]; then
@@ -32,6 +32,6 @@ if [ ! -f "$VAULT_DIR/.sync-configured" ]; then
   touch "$VAULT_DIR/.sync-configured"
 fi
 
-ob sync --json || { echo "vault-sync: ob sync failed" >&2; exit 0; }
+ob sync --path "$VAULT_DIR" || { echo "vault-sync: ob sync failed" >&2; exit 0; }
 echo "vault-sync: Obsidian vault '$VAULT_NAME' synced to $VAULT_DIR"
 exit 0
