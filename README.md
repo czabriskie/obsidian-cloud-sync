@@ -41,8 +41,12 @@ The vault lands at `$HOME/vault` inside the container and is never committed to 
 3. **Network access**: set to **Full**, or Custom with Obsidian's API/sync domains allowed
    (the default Trusted list may not include them).
 
-4. **MFA**: `ob login` cannot automate a live MFA code. For unattended runs the Obsidian
-   account must not have MFA enabled (or you log in manually once per session).
+4. **MFA**: with MFA enabled on the Obsidian account, add the TOTP seed as
+   `OBSIDIAN_TOTP_SECRET` (the base32 string shown under "can't scan?" when enrolling the
+   authenticator) — `cloud-init.sh` computes the current 6-digit code at each login. Note
+   this stores the seed beside the password in the environment config; MFA still protects
+   the account against password leaks elsewhere, but not against someone reading this
+   environment. Without the seed, unattended runs require MFA to be off.
 
 ## Using from the Claude app (remote)
 
