@@ -40,7 +40,15 @@ on top of whatever privacy rules that routine's own instructions already state:
   `https://camzabriskie.com/<tech-bytes|life-bytes>/<slug>/`), to drive readers to the
   full version. This applies even before the blog PR is merged, since the URL is fixed by
   the slug.
+- **Link the actual source whenever a draft references someone else's work.** If a
+  LinkedIn or blog draft is built on a Readwise highlight (an article, a guide, a book
+  review, anything with a `book_source_url`), the draft must include that URL, not just
+  name the site or author. Pull `book_source_url` (and `url` as a fallback) when fetching
+  highlights — don't fetch just `text`/`note`/`book_title`/`book_author`, that leaves the
+  link out. This doesn't apply to journal-sourced drafts, where there's no other person's
+  work being referenced.
 
-These three came out of a real correction on 2026-08-22: a first-pass draft read as
-describing a live work situation, even though it never named the employer or the
-project. When in doubt, prefer the more generic version.
+These four came out of real corrections on 2026-08-22: a first-pass draft read as
+describing a live work situation even though it never named the employer or the project,
+and two drafts referenced articles by name without linking to them. When in doubt, prefer
+the more generic version, and always link out when crediting someone else's work.
