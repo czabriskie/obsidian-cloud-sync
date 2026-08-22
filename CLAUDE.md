@@ -47,8 +47,16 @@ on top of whatever privacy rules that routine's own instructions already state:
   highlights — don't fetch just `text`/`note`/`book_title`/`book_author`, that leaves the
   link out. This doesn't apply to journal-sourced drafts, where there's no other person's
   work being referenced.
+  - **If the same idea also has a companion blog post, the source link goes in the blog
+    post, not the LinkedIn draft.** Put the real `book_source_url` in the blog post's
+    prose (near where the article's first mentioned), and let the LinkedIn draft's link
+    to the blog post carry the attribution by extension — don't put both the source link
+    and the blog link in the LinkedIn body, that's redundant. A LinkedIn draft with no
+    blog companion still links the source directly, per the rule above.
 
 These four came out of real corrections on 2026-08-22: a first-pass draft read as
 describing a live work situation even though it never named the employer or the project,
-and two drafts referenced articles by name without linking to them. When in doubt, prefer
-the more generic version, and always link out when crediting someone else's work.
+two drafts referenced articles by name without linking to them, and once that got fixed,
+a draft with a blog companion ended up carrying both a source link and a blog link when
+one would do. When in doubt, prefer the more generic version, and always credit someone
+else's work with an actual link somewhere in the pair of posts, not just a name-drop.
